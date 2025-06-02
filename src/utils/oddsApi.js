@@ -2,7 +2,8 @@
 import { ODDS_API_KEY } from "../config/oddsApi.js";
 
 export async function fetchAllOdds() {
-  const sports = ["basketball_nba", "americanfootball_nfl", "baseball_mlb"];
+  //const sports = ["basketball_nba", "americanfootball_nfl", "baseball_mlb"];
+  const sports = ["baseball_mlb"];
   const allOdds = [];
 
   for (const sport of sports) {
