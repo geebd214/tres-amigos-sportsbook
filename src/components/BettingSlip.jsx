@@ -28,19 +28,16 @@ export default function BettingSlip({ bets, wagerAmount, onClearBets, onRemoveBe
         <p className="text-gray-400">No bets added yet.</p>
       ) : (
         <>
-          <ul className="space-y-3">
-            {bets.map((bet, index) => (
-              <li key={index} className="text-sm text-white border-b border-gray-600 pb-2 flex justify-between items-center">
-                <div>
-                  <p><strong>{bet.game}</strong></p>
-                  <p>{bet.market.toUpperCase()} | {bet.team} | Odds: {bet.odds}</p>
-                </div>
-                <button onClick={() => onRemoveBet(index)} className="text-gray-400 hover:text-red-500">
-                  <Trash2 size={16} />
-                </button>
-              </li>
-            ))}
-          </ul>
+        <ul className="mb-4 space-y-2">
+        {bets.map((bet, i) => (
+            <li key={i} className="bg-gray-700 p-2 rounded text-sm">
+            <div className="font-semibold">{bet.game}</div>
+            <div>{bet.market.toUpperCase()} — {bet.team} ({bet.odds})</div>
+            {bet.spread !== null && <div>Spread: {bet.spread}</div>}
+            {bet.total !== null && <div>O/U Line: {bet.total}</div>}
+            </li>
+        ))}
+        </ul>
           <div className="mt-4 text-green-400 font-semibold">
             Parlay Odds: {parlayOdds.toFixed(2)}
           </div>
