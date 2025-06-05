@@ -1,4 +1,4 @@
-// File: components/AdminPage.jsx
+// File: pages/AdminPage.jsx
 
 import { useEffect, useState } from "react";
 import { db } from "../firebase";
