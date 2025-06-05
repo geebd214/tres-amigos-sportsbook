@@ -2,17 +2,16 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, getDocs, updateDoc, doc } from 'firebase/firestore';
-import fetch from 'node-fetch';
 import { firebaseConfig } from './src/firebase.js';
-import { ODDS_API_KEY } from './src/config/oddsApi.js';
+import { fetchAllOdds } from './src/utils/oddsApi.js';
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function fetchResults() {
-  const res = await fetch(`https://api.the-odds-api.com/v4/sports/basketball_nba/scores/?daysFrom=2&apiKey=${ODDS_API_KEY}`);
-  const data = await res.json();
-  return data;
+  const allOdds = await fetchAllOdds();
+  // Filter to completed games only with score data if needed
+  return allOdds.filter(g => g.scores && g.completed);
 }
 
 async function updateBetResults() {
@@ -26,7 +25,10 @@ async function updateBetResults() {
 
     let allResolved = true;
     const updatedBets = slip.bets.map(bet => {
-      const game = results.find(g => g.home_team.includes(bet.team) || g.away_team.includes(bet.team));
+      const game = results.find(g =>
+        g.home_team.includes(bet.team) || g.away_team.includes(bet.team)
+      );
+
       if (!game || !game.completed) {
         allResolved = false;
         return bet;
@@ -39,7 +41,7 @@ async function updateBetResults() {
 
       return {
         ...bet,
-        result: didWin ? 'win' : 'lose'
+        result: didWin ? 'win' : 'lose',
       };
     });
 
@@ -48,7 +50,7 @@ async function updateBetResults() {
     const didWinAll = updatedBets.every(b => b.result === 'win');
     await updateDoc(doc(db, 'bets', docSnap.id), {
       status: didWinAll ? 'win' : 'lose',
-      bets: updatedBets
+      bets: updatedBets,
     });
   }
 
