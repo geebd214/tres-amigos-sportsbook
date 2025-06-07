@@ -42,14 +42,8 @@ export default function MakeBets() {
 
   return (
     <div className="p-4 text-white">
-      <div className="flex flex-col lg:flex-row gap-6 w-full">
-        <div className="flex-grow">
-          <OddsBoard
-            sports={SPORTS}
-            onAddBet={(bet) => setBets(prev => [...prev, bet])}
-          />
-        </div>
-        <div className="w-full lg:w-80">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="w-full lg:w-80 order-1 lg:order-2">
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Amount to Bet ($)</label>
             <input
@@ -66,6 +60,12 @@ export default function MakeBets() {
             onClearBets={handleClearBets}
             onRemoveBet={handleRemoveBet}
             onSubmitSlip={handleSubmitSlip}
+          />
+        </div>
+        <div className="w-full lg:flex-1 order-2 lg:order-1">
+          <OddsBoard
+            sports={SPORTS}
+            onAddBet={(bet) => setBets(prev => [...prev, bet])}
           />
         </div>
       </div>
