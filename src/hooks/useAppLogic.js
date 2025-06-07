@@ -1,5 +1,3 @@
-// File: hooks/useAppLogic.js
-
 import { useEffect, useState } from "react";
 import {
   collection,
@@ -42,23 +40,27 @@ export function useCachedOdds(selectedDate) {
 
   useEffect(() => {
     const fetchOdds = async () => {
-      const ref = doc(db, "meta", "odds_cache");
-      const snapshot = await getDoc(ref);
-      const now = Date.now();
-
-      if (snapshot.exists()) {
-        const { data, timestamp } = snapshot.data();
-        const age = now - timestamp.toMillis();
-        if (age < ODDS_CACHE_TTL) {
-          setOddsData(data);
-          setOddsLastUpdated(new Date(timestamp.toMillis()));
-          return;
-        }
-      }
-
       try {
+        const ref = doc(db, "meta", "odds_cache");
+        const snapshot = await getDoc(ref);
+        const now = Date.now();
+
+        if (snapshot.exists()) {
+          const { data, timestamp } = snapshot.data();
+          const age = now - timestamp.toMillis();
+          if (age < ODDS_CACHE_TTL) {
+            setOddsData(data);
+            setOddsLastUpdated(new Date(timestamp.toMillis()));
+            return;
+          }
+        }
+
         const data = await fetchAllOdds();
-        await setDoc(ref, { data, timestamp: serverTimestamp() });
+        await setDoc(ref, { 
+          data, 
+          timestamp: serverTimestamp(),
+          lastUpdated: new Date().toISOString()
+        });
         setOddsData(data);
         setOddsLastUpdated(new Date());
       } catch (err) {
@@ -70,15 +72,6 @@ export function useCachedOdds(selectedDate) {
   }, [selectedDate]);
 
   return { oddsData, oddsLastUpdated };
-}
-
-export function useFilteredBets(bets, statusFilter) {
-  return (statusFilter === "all" ? bets : bets.filter(bet => bet.status === statusFilter))
-    .sort((a, b) => {
-      const aEarliest = Math.min(...a.bets.map(bet => new Date(bet.commence_time).getTime() || 0));
-      const bEarliest = Math.min(...b.bets.map(bet => new Date(bet.commence_time).getTime() || 0));
-      return aEarliest - bEarliest;
-    });
 }
 
 export function useWinningsChartData(myBets, timeFilter) {
@@ -108,6 +101,13 @@ export function useWinningsChartData(myBets, timeFilter) {
     }, []);
 }
 
+export function useFilteredBets(myBets, statusFilter) {
+  return myBets.filter(bet => {
+    if (statusFilter === "all") return true;
+    return bet.status === statusFilter;
+  });
+}
+
 export async function getAllBets() {
   const snapshot = await getDocs(collection(db, "bets"));
   return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -121,9 +121,4 @@ export async function createBet(bet) {
 export async function updateBet(betId, updates) {
   const ref = doc(db, "bets", betId);
   await updateDoc(ref, updates);
-}
-
-export async function deleteBet(betId) {
-  const ref = doc(db, "bets", betId);
-  await deleteDoc(ref);
-}
+} 

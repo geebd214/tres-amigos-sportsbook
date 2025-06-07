@@ -7,11 +7,23 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
 .firebase
 *.local
+
+# Environment variables and secrets
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+*.env
+service-account*.json
+firebase-credentials*.json
+google-credentials*.json
 
 # Editor directories and files
 .vscode/*
@@ -23,3 +35,42 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build output
+build/
+out/
+.next/
+
+# Cache
+.cache/
+.npm/
+.eslintcache
+.stylelintcache
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.der
+*.p8
+*.pem
+*.key
+*.cert
+*.crt
+*.p12
+*.pfx
+*.der
+*.p8
+
+# Firebase
+# DO NOT ignore these files - they should be tracked in git
+# firestore.rules
+# storage.rules
+# firebase.json

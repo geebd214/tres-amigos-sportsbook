@@ -1,48 +1,13 @@
 // File: components/OddsBoard.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
-import { fetchAllOdds } from "../utils/oddsApi";
-
-const ODDS_CACHE_KEY = "cachedOdds";
-const ODDS_CACHE_TIME_KEY = "cachedOddsTimestamp";
-const CACHE_TTL = 60 * 60 * 1000; // 1 hour
+import { useCachedOdds } from "../hooks/useAppLogic";
 
 export default function OddsBoard({ sports, onAddBet }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [oddsData, setOddsData] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [loadingCount, setLoadingCount] = useState(0);
   const [collapsed, setCollapsed] = useState({});
-
-  useEffect(() => {
-    const fetchOdds = async () => {
-      const now = Date.now();
-      const cachedTimestamp = localStorage.getItem(ODDS_CACHE_TIME_KEY);
-      const cachedOdds = localStorage.getItem(ODDS_CACHE_KEY);
-
-      if (cachedTimestamp && cachedOdds && now - cachedTimestamp < CACHE_TTL) {
-        console.log("Odds fetched from cache");
-        setOddsData(JSON.parse(cachedOdds));
-        setLastUpdated(new Date(Number(cachedTimestamp)));
-        return;
-      }
-
-      try {
-        setLoadingCount((count) => count + 1);
-        const data = await fetchAllOdds();
-        localStorage.setItem(ODDS_CACHE_KEY, JSON.stringify(data));
-        localStorage.setItem(ODDS_CACHE_TIME_KEY, now);
-        setOddsData(data);
-        setLastUpdated(new Date(now));
-        console.log(`API hit count: ${loadingCount + 1}`);
-      } catch (err) {
-        console.error("Error fetching odds:", err);
-      }
-    };
-
-    fetchOdds();
-  }, [selectedDate, loadingCount]);
+  const { oddsData, oddsLastUpdated } = useCachedOdds(selectedDate);
 
   const handlePrevious = () => {
     const prev = new Date(selectedDate);
@@ -102,52 +67,58 @@ export default function OddsBoard({ sports, onAddBet }) {
               <div className="flex justify-between items-center mb-2 cursor-pointer" onClick={() => toggleCollapse(key)}>
                 <h3 className="text-xl font-bold">{label}</h3>
                 <div className="flex items-center gap-2">
-                  {lastUpdated && (
+                  {oddsLastUpdated && (
                     <span className="text-xs text-gray-400">
-                      Updated: {lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      Updated: {oddsLastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   )}
                   <span className="text-xl">{isCollapsed ? "▼" : "▲"}</span>
                 </div>
               </div>
               {!isCollapsed && (
-                <ul className="space-y-2">
-                  {games.map(game => (
-                    <li key={game.id} className="border border-gray-700 rounded p-3">
-                      <p className="text-sm text-gray-400 mb-1">
-                        {new Date(game.commence_time).toLocaleString()}
-                      </p>
-                      <p className="font-semibold mb-2">
-                        {game.home_team} vs {game.away_team}
-                      </p>
-                      {game.bookmakers?.[0]?.markets?.map((market, mi) => (
-                        <div key={mi} className="mb-2">
-                          <p className="text-sm font-medium text-blue-300 capitalize">
-                            {market.key.replace("h2h", "moneyline")}
+                <ul className="space-y-4">
+                  {games.map((game) => (
+                    <li key={game.id} className="border-t border-gray-700 pt-4 first:border-t-0 first:pt-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-semibold">{game.home_team}</h4>
+                          <h4 className="font-semibold">{game.away_team}</h4>
+                          <p className="text-sm text-gray-400">
+                            {new Date(game.commence_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>
-                          <div className="flex flex-wrap gap-2 mt-1">
-                            {market.outcomes.map((outcome, oi) => (
-                              <button
-                                key={oi}
-                                onClick={() =>
-                                  onAddBet({
-                                    game: `${game.home_team} vs ${game.away_team}`,
-                                    market: market.key,
-                                    team: outcome.name,
-                                    odds: outcome.price,
-                                    point: outcome.point ?? null,
-                                    commence_time: game.commence_time,
-                                    spread: market.key === "spreads" ? outcome.point : null,
-                                    total: market.key === "totals" ? outcome.point : null,
-                                  })
-                                }
-                                className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
-                              >
-                                {outcome.name}
-                                {outcome.point !== undefined ? ` (${outcome.point})` : ""} {`(${outcome.price})`}
-                              </button>
-                            ))}
-                          </div>
+                        </div>
+                      </div>
+                      {game.bookmakers?.map((bookmaker) => (
+                        <div key={bookmaker.key} className="mt-2">
+                          <h5 className="text-sm font-medium text-gray-400">{bookmaker.title}</h5>
+                          {bookmaker.markets.map((market) => (
+                            <div key={market.key} className="mt-1">
+                              <h6 className="text-sm font-medium text-gray-500">{market.key.toUpperCase()}</h6>
+                              <div className="flex flex-wrap gap-2 mt-1">
+                                {market.outcomes.map((outcome, oi) => (
+                                  <button
+                                    key={oi}
+                                    onClick={() =>
+                                      onAddBet({
+                                        game: `${game.home_team} vs ${game.away_team}`,
+                                        market: market.key,
+                                        team: outcome.name,
+                                        odds: outcome.price,
+                                        point: outcome.point ?? null,
+                                        commence_time: game.commence_time,
+                                        spread: market.key === "spreads" ? outcome.point : null,
+                                        total: market.key === "totals" ? outcome.point : null,
+                                      })
+                                    }
+                                    className="px-3 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm"
+                                  >
+                                    {outcome.name}
+                                    {outcome.point !== undefined ? ` (${outcome.point})` : ""} {`(${outcome.price})`}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       ))}
                     </li>
