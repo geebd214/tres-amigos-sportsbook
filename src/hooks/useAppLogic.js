@@ -95,7 +95,13 @@ export function useWinningsChartData(myBets, timeFilter) {
     .sort((a, b) => a.createdAt?.toDate() - b.createdAt?.toDate())
     .reduce((acc, bet) => {
       const date = bet.createdAt?.toDate().toLocaleDateString("en-US", { month: "2-digit", day: "2-digit" });
-      const change = bet.status === "win" ? bet.wagerAmount : -bet.wagerAmount;
+      const parlayOdds = bet.bets?.reduce((oAcc, b) => {
+        const dec = b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
+        return oAcc * dec;
+      }, 1) ?? 1;
+      const change = bet.status === "win"
+        ? bet.wagerAmount * parlayOdds
+        : -bet.wagerAmount;
       const last = acc.length > 0 ? acc[acc.length - 1].total : 0;
       acc.push({ name: date, total: last + change });
       return acc;
