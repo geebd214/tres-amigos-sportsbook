@@ -37,6 +37,7 @@ export function useUserBets(user) {
 export function useCachedOdds(selectedDate) {
   const [oddsData, setOddsData] = useState(null);
   const [oddsLastUpdated, setOddsLastUpdated] = useState(null);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchOdds = async () => {
@@ -48,30 +49,51 @@ export function useCachedOdds(selectedDate) {
         if (snapshot.exists()) {
           const { data, timestamp } = snapshot.data();
           const age = now - timestamp.toMillis();
-          if (age < ODDS_CACHE_TTL) {
-            setOddsData(data);
-            setOddsLastUpdated(new Date(timestamp.toMillis()));
-            return;
+          
+          // Always set the cached data first, even if expired
+          setOddsData(data);
+          setOddsLastUpdated(new Date(timestamp.toMillis()));
+          
+          // Only try to fetch new data if cache is expired
+          if (age >= ODDS_CACHE_TTL) {
+            try {
+              const newData = await fetchAllOdds();
+              await setDoc(ref, { 
+                data: newData, 
+                timestamp: serverTimestamp(),
+                lastUpdated: new Date().toISOString()
+              });
+              setOddsData(newData);
+              setOddsLastUpdated(new Date());
+              setError(null);
+            } catch (fetchError) {
+              console.error("Error fetching new odds:", fetchError);
+              setError("Failed to fetch new odds. Showing cached data.");
+              // Keep showing the cached data
+            }
           }
+        } else {
+          // No cache exists, try to fetch new data
+          const newData = await fetchAllOdds();
+          await setDoc(ref, { 
+            data: newData, 
+            timestamp: serverTimestamp(),
+            lastUpdated: new Date().toISOString()
+          });
+          setOddsData(newData);
+          setOddsLastUpdated(new Date());
+          setError(null);
         }
-
-        const data = await fetchAllOdds();
-        await setDoc(ref, { 
-          data, 
-          timestamp: serverTimestamp(),
-          lastUpdated: new Date().toISOString()
-        });
-        setOddsData(data);
-        setOddsLastUpdated(new Date());
       } catch (err) {
-        console.error("Error fetching odds:", err);
+        console.error("Error in odds fetching process:", err);
+        setError("Error loading odds data");
       }
     };
 
     fetchOdds();
   }, [selectedDate]);
 
-  return { oddsData, oddsLastUpdated };
+  return { oddsData, oddsLastUpdated, error };
 }
 
 export function useWinningsChartData(myBets, timeFilter) {

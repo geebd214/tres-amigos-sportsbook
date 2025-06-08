@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceDot } from "recharts";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
+import BetCard from "../components/BetCard";
 
 // Helper to handle Firestore Timestamp or ISO string
 function getCreatedAtDate(createdAt) {
@@ -15,7 +16,7 @@ function getCreatedAtDate(createdAt) {
 
 export default function Dashboard({ user }) {
   const [myBets, setMyBets] = useState([]);
-  const [timeRange, setTimeRange] = useState("1d"); // "1d", "1w", "1m", "all"
+  const [timeRange, setTimeRange] = useState("1w"); // Default to weekly view
   const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
@@ -30,7 +31,6 @@ export default function Dashboard({ user }) {
 
   const chartData = useMemo(() => {
     const timeRanges = { 
-      "1d": 1, 
       "1w": 7, 
       "1m": 30, 
       "all": Infinity 
@@ -52,13 +52,7 @@ export default function Dashboard({ user }) {
       const createdAtDate = getCreatedAtDate(bet.createdAt);
       let date;
       
-      if (timeRange === "1d") {
-        // For daily view, group by hour
-        date = createdAtDate.toLocaleString("en-US", {
-          hour: "numeric",
-          hour12: true
-        });
-      } else if (timeRange === "1w") {
+      if (timeRange === "1w") {
         // For weekly view, group by day
         date = createdAtDate.toLocaleDateString("en-US", {
           weekday: "short",
@@ -84,15 +78,7 @@ export default function Dashboard({ user }) {
     // Calculate running total with proper date sorting
     let runningTotal = 0;
     const data = Object.entries(betsByDate)
-      .sort(([dateA], [dateB]) => {
-        if (timeRange === "1d") {
-          // For daily view, sort by hour
-          const hourA = parseInt(dateA.split(":")[0]);
-          const hourB = parseInt(dateB.split(":")[0]);
-          return hourA - hourB;
-        }
-        return new Date(dateA) - new Date(dateB);
-      })
+      .sort(([dateA], [dateB]) => new Date(dateA) - new Date(dateB))
       .map(([date, bets]) => {
         // Calculate total change for all bets in this time period
         const periodChange = bets.reduce((total, bet) => {
@@ -120,12 +106,7 @@ export default function Dashboard({ user }) {
       const now = new Date();
       let defaultDate;
       
-      if (timeRange === "1d") {
-        defaultDate = now.toLocaleString("en-US", {
-          hour: "numeric",
-          hour12: true
-        });
-      } else if (timeRange === "1w") {
+      if (timeRange === "1w") {
         defaultDate = now.toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",
@@ -178,12 +159,6 @@ export default function Dashboard({ user }) {
           📈 Total Winnings: ${chartData.length > 0 ? chartData[chartData.length - 1].total.toFixed(2) : "0.00"}
         </h2>
         <div className="flex gap-2">
-          <button
-            onClick={() => setTimeRange("1d")}
-            className={`px-3 py-1 rounded ${timeRange === "1d" ? "bg-blue-600" : "bg-gray-700"} hover:bg-blue-700`}
-          >
-            Today
-          </button>
           <button
             onClick={() => setTimeRange("1w")}
             className={`px-3 py-1 rounded ${timeRange === "1w" ? "bg-blue-600" : "bg-gray-700"} hover:bg-blue-700`}
@@ -280,58 +255,9 @@ export default function Dashboard({ user }) {
             <p className="text-gray-400">No bets found for this date</p>
           ) : (
             <div className="space-y-3 pr-2">
-              {selectedBets.map((bet, index) => {
-                const parlayOdds = bet.bets?.reduce((oAcc, b) => {
-                  const dec = b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
-                  return oAcc * dec;
-                }, 1) ?? 1;
-                const profitLoss = bet.status === "win"
-                  ? bet.wagerAmount * parlayOdds
-                  : -bet.wagerAmount;
-                
-                return (
-                  <div 
-                    key={index}
-                    className={`p-3 rounded-lg border ${
-                      bet.status === "win" 
-                        ? "bg-gray-700 border-green-500" 
-                        : "bg-gray-700 border-red-500"
-                    }`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-                          bet.status === "win" 
-                            ? "bg-green-900 text-green-200" 
-                            : "bg-red-900 text-red-200"
-                        }`}>
-                          {bet.status.toUpperCase()}
-                        </span>
-                        {bet.bets?.map((b, i) => (
-                        <p key={i} className="text-sm text-gray-300">
-                          {b.team} ({b.odds > 0 ? "+" : ""}{b.odds})
-                        </p>
-                      ))}
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-lg font-semibold ${
-                          profitLoss >= 0 ? "text-green-400" : "text-red-400"
-                        }`}>
-                          {profitLoss >= 0 ? "+" : ""}${profitLoss.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="mt-2 pt-2 border-t border-gray-600">
-                                              <p className="mt-1 text-sm text-gray-300">
-                          Wager: ${bet.wagerAmount.toFixed(2)}
-                        </p>
-                        <p className="text-sm text-gray-300">
-                          Odds: {parlayOdds.toFixed(2)}x
-                        </p>
-                    </div>
-                  </div>
-                );
-              })}
+              {selectedBets.map((bet, index) => (
+                <BetCard key={index} bet={bet} />
+              ))}
             </div>
           )}
         </div>
