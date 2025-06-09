@@ -114,15 +114,15 @@ export default function OddsBoard({ sports, onAddBet }) {
           </button>
         </div>
         <select
-          value={selectedBookmaker}
-          onChange={(e) => setSelectedBookmaker(e.target.value)}
-          className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1 text-white hover:bg-gray-700"
-        >
-          <option value="all">All Bookmakers</option>
-          {bookmakers.map(bm => (
-            <option key={bm} value={bm}>{bm}</option>
-          ))}
-        </select>
+  value={selectedBookmaker}
+  onChange={(e) => setSelectedBookmaker(e.target.value)}
+  className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1 text-white hover:bg-gray-700"
+>
+  {bookmakers.map(bm => (
+    <option key={bm} value={bm}>{bm}</option>
+  ))}
+</select>
+
       </div>
 
       {error && (
@@ -140,7 +140,23 @@ export default function OddsBoard({ sports, onAddBet }) {
 
           return (
             <div key={key} className="bg-gray-900 p-2 rounded-lg border border-gray-800 shadow-lg">
-              <h3 className="text-xl font-bold mb-2 text-white pl-2">{label}</h3>
+<button
+  onClick={() => toggleCollapse(key)}
+  className="w-full flex items-center justify-between mb-2 px-2 py-1 bg-gray-900 hover:bg-gray-800 rounded text-left"
+>
+  <span className="text-xl font-bold text-white">{label}</span>
+  <span className="text-xs text-gray-400">
+    {oddsLastUpdated
+      ? `Last updated: ${new Date(oddsLastUpdated).toLocaleTimeString([], {
+          hour: "numeric",
+          minute: "2-digit",
+          second: "2-digit",
+        })}`
+      : ""}
+  </span>
+</button>
+                  {/* Collapsible content */}
+    {!collapsed[key] && (
               <div className="divide-y divide-gray-800">
                 {games.map((game) => {
                   // Find the selected bookmaker for this game
@@ -171,76 +187,213 @@ export default function OddsBoard({ sports, onAddBet }) {
                     return `${over ? "O" : "U"} ${point} (${priceStr})`;
                   };
                   return (
-                    <div key={game.id} className="grid grid-cols-5 items-stretch bg-gray-800 hover:bg-gray-700 transition rounded-lg mb-2 border border-gray-700 shadow">
-                      {/* Date/Time Block */}
-                      <div className="flex flex-col items-center justify-center bg-gray-900 text-white font-bold py-2 px-4 rounded-l-lg min-w-[90px] border-r border-gray-700">
-                        <span className="text-lg">{new Date(game.commence_time).toLocaleDateString("en-US", { month: "numeric", day: "numeric", year: "2-digit" })}</span>
-                        <span className="text-base">{new Date(game.commence_time).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</span>
-                      </div>
-                      {/* Teams */}
-                      <div className="flex flex-col justify-center border-l-0 border-r border-gray-700 px-4 py-2 col-span-2 min-w-[200px]">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-white font-medium">{game.away_team}</span>
-                          <span className="border-t border-gray-700 my-1" />
-                          <span className="text-white font-medium">{game.home_team}</span>
-                        </div>
-                      </div>
-                      {/* Odds Columns */}
-                      {/* Spread */}
-                      <div className="flex flex-col border-l-0 border-r border-gray-700 px-2 py-2 items-center justify-center">
-                        <button
-                          className="w-full text-left px-2 py-1 rounded hover:bg-gray-600 text-gray-200 font-semibold border border-gray-700 mb-1"
-                          onClick={() => onClick(game, "spreads", game.away_team, getOutcome(spreadMarket, game.away_team)?.price, getOutcome(spreadMarket, game.away_team)?.point)}
-                          disabled={!spreadMarket}
-                        >
-                          {formatOdds(getOutcome(spreadMarket, game.away_team))}
-                        </button>
-                        <button
-                          className="w-full text-left px-2 py-1 rounded hover:bg-gray-600 text-gray-200 font-semibold border border-gray-700"
-                          onClick={() => onClick(game, "spreads", game.home_team, getOutcome(spreadMarket, game.home_team)?.price, getOutcome(spreadMarket, game.home_team)?.point)}
-                          disabled={!spreadMarket}
-                        >
-                          {formatOdds(getOutcome(spreadMarket, game.home_team))}
-                        </button>
-                      </div>
-                      {/* Moneyline */}
-                      <div className="flex flex-col border-l-0 border-r border-gray-700 px-2 py-2 items-center justify-center">
-                        <button
-                          className="w-full text-left px-2 py-1 rounded hover:bg-gray-600 text-gray-200 font-semibold border border-gray-700 mb-1"
-                          onClick={() => onClick(game, "h2h", game.away_team, getOutcome(moneylineMarket, game.away_team)?.price)}
-                          disabled={!moneylineMarket}
-                        >
-                          {formatOdds(getOutcome(moneylineMarket, game.away_team), false)}
-                        </button>
-                        <button
-                          className="w-full text-left px-2 py-1 rounded hover:bg-gray-600 text-gray-200 font-semibold border border-gray-700"
-                          onClick={() => onClick(game, "h2h", game.home_team, getOutcome(moneylineMarket, game.home_team)?.price)}
-                          disabled={!moneylineMarket}
-                        >
-                          {formatOdds(getOutcome(moneylineMarket, game.home_team), false)}
-                        </button>
-                      </div>
-                      {/* Total */}
-                      <div className="flex flex-col border-l-0 px-2 py-2 items-center justify-center rounded-r-lg">
-                        <button
-                          className="w-full text-left px-2 py-1 rounded hover:bg-gray-600 text-gray-200 font-semibold border border-gray-700 mb-1"
-                          onClick={() => onClick(game, "totals", "Over", getTotalOutcome(totalMarket, true)?.price, getTotalOutcome(totalMarket, true)?.point)}
-                          disabled={!totalMarket}
-                        >
-                          {formatTotalOdds(getTotalOutcome(totalMarket, true), true)}
-                        </button>
-                        <button
-                          className="w-full text-left px-2 py-1 rounded hover:bg-gray-600 text-gray-200 font-semibold border border-gray-700"
-                          onClick={() => onClick(game, "totals", "Under", getTotalOutcome(totalMarket, false)?.price, getTotalOutcome(totalMarket, false)?.point)}
-                          disabled={!totalMarket}
-                        >
-                          {formatTotalOdds(getTotalOutcome(totalMarket, false), false)}
-                        </button>
-                      </div>
-                    </div>
+<div
+  key={game.id}
+  className="rounded-lg border border-gray-700 shadow bg-gray-800 hover:bg-gray-700 transition mb-2 overflow-hidden"
+>
+
+
+  {/* Game row */}
+  <div
+  className="flex flex-col sm:grid sm:grid-cols-[100px_2fr_1fr_1fr_1fr] bg-gray-800 hover:bg-gray-700 transition rounded-lg border border-gray-700 shadow mb-2 overflow-hidden"
+>
+{/* Date/Time */}
+<div className="p-2 flex flex-col items-center justify-center border-b sm:border-b-0 sm:border-r border-gray-700 bg-gray-900 text-white text-center">
+  <div className="text-lg">
+    {new Date(game.commence_time).toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "2-digit",
+    })}
+  </div>
+  <div className="text-base">
+    {new Date(game.commence_time).toLocaleTimeString([], {
+      hour: "numeric",
+      minute: "2-digit",
+    })}
+  </div>
+</div>
+
+
+
+    {/* Teams */}
+    <div className="p-2 flex items-center border-b sm:border-b-0 sm:border-r border-gray-700 text-white">
+
+      <div className="flex flex-col gap-0 leading-tight overflow-hidden text-ellipsis">
+        <span className="text-white font-medium truncate whitespace-nowrap">
+          {game.away_team}
+        </span>
+        <span className="border-t border-gray-700 my-1" />
+        <span className="text-white font-medium truncate whitespace-nowrap">
+          {game.home_team}
+        </span>
+      </div>
+    </div>
+
+    {/* Spread */}
+<div className="p-2 border-b sm:border-b-0 sm:border-r border-gray-700 text-white flex flex-col items-stretch">
+  <div className="text-xs font-semibold uppercase text-gray-400 mb-1 text-center">Spread</div>
+
+  <button
+      className="
+      w-full text-center px-3 py-2 
+      text-base font-semibold 
+      text-white 
+      bg-gray-700 hover:bg-gray-600 
+      rounded-lg border border-gray-600 
+      shadow-sm hover:shadow-md 
+      transition-colors duration-150
+    "
+    onClick={() =>
+      onClick(
+        game,
+        "spreads",
+        game.away_team,
+        getOutcome(spreadMarket, game.away_team)?.price,
+        getOutcome(spreadMarket, game.away_team)?.point
+      )
+    }
+    disabled={!spreadMarket}
+  >
+    {formatOdds(getOutcome(spreadMarket, game.away_team))}
+  </button>
+
+  <button
+      className="
+      w-full text-center px-3 py-2 
+      text-base font-semibold 
+      text-white 
+      bg-gray-700 hover:bg-gray-600 
+      rounded-lg border border-gray-600 
+      shadow-sm hover:shadow-md 
+      transition-colors duration-150
+    "
+    onClick={() =>
+      onClick(
+        game,
+        "spreads",
+        game.home_team,
+        getOutcome(spreadMarket, game.home_team)?.price,
+        getOutcome(spreadMarket, game.home_team)?.point
+      )
+    }
+    disabled={!spreadMarket}
+  >
+    {formatOdds(getOutcome(spreadMarket, game.home_team))}
+  </button>
+</div>
+
+
+
+    {/* Moneyline */}
+    <div className="p-2 border-b sm:border-b-0 sm:border-r border-gray-700 text-white flex flex-col items-stretch">
+  <div className="text-xs font-semibold uppercase text-gray-400 mb-1 text-center">Moneyline</div>
+      <button
+          className="
+          w-full text-center px-3 py-2 
+          text-base font-semibold 
+          text-white 
+          bg-gray-700 hover:bg-gray-600 
+          rounded-lg border border-gray-600 
+          shadow-sm hover:shadow-md 
+          transition-colors duration-150
+        "
+        onClick={() =>
+          onClick(
+            game,
+            "h2h",
+            game.away_team,
+            getOutcome(moneylineMarket, game.away_team)?.price
+          )
+        }
+        disabled={!moneylineMarket}
+      >
+        {formatOdds(getOutcome(moneylineMarket, game.away_team), false)}
+      </button>
+      <button
+          className="
+          w-full text-center px-3 py-2 
+          text-base font-semibold 
+          text-white 
+          bg-gray-700 hover:bg-gray-600 
+          rounded-lg border border-gray-600 
+          shadow-sm hover:shadow-md 
+          transition-colors duration-150
+        "
+
+        onClick={() =>
+          onClick(
+            game,
+            "h2h",
+            game.home_team,
+            getOutcome(moneylineMarket, game.home_team)?.price
+          )
+        }
+        disabled={!moneylineMarket}
+      >
+        {formatOdds(getOutcome(moneylineMarket, game.home_team), false)}
+      </button>
+    </div>
+
+    {/* Total */}
+    <div className="p-2 border-b sm:border-b-0 sm:border-r border-gray-700 text-white flex flex-col items-stretch">
+  <div className="text-xs font-semibold uppercase text-gray-400 mb-1 text-center">Total</div>
+      <button
+          className="
+          w-full text-center px-3 py-2 
+          text-base font-semibold 
+          text-white 
+          bg-gray-700 hover:bg-gray-600 
+          rounded-lg border border-gray-600 
+          shadow-sm hover:shadow-md 
+          transition-colors duration-150
+        "
+
+        onClick={() =>
+          onClick(
+            game,
+            "totals",
+            "Over",
+            getTotalOutcome(totalMarket, true)?.price,
+            getTotalOutcome(totalMarket, true)?.point
+          )
+        }
+        disabled={!totalMarket}
+      >
+        {formatTotalOdds(getTotalOutcome(totalMarket, true), true)}
+      </button>
+      <button
+          className="
+          w-full text-center px-3 py-2 
+          text-base font-semibold 
+          text-white 
+          bg-gray-700 hover:bg-gray-600 
+          rounded-lg border border-gray-600 
+          shadow-sm hover:shadow-md 
+          transition-colors duration-150
+        "
+
+        onClick={() =>
+          onClick(
+            game,
+            "totals",
+            "Under",
+            getTotalOutcome(totalMarket, false)?.price,
+            getTotalOutcome(totalMarket, false)?.point
+          )
+        }
+        disabled={!totalMarket}
+      >
+        {formatTotalOdds(getTotalOutcome(totalMarket, false), false)}
+      </button>
+    </div>
+  </div>
+</div>
+
                   );
                 })}
               </div>
+    )}
             </div>
           );
         })
