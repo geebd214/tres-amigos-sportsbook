@@ -1,16 +1,16 @@
 import { FaBasketballBall, FaFootballBall, FaBaseballBall } from 'react-icons/fa';
 
 export default function BetCard({ bet }) {
+  // Calculate parlay odds by multiplying decimal odds
   const parlayOdds = bet.bets?.reduce((oAcc, b) => {
-    const dec = b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
-    return oAcc * dec;
+    return oAcc * b.odds;
   }, 1) ?? 1;
   
   const profitLoss = bet.status === "win"
-    ? bet.wagerAmount * parlayOdds
+    ? bet.wagerAmount * (parlayOdds - 1)  // Subtract 1 to get profit only
     : -bet.wagerAmount;
 
-  const potentialWinnings = bet.wagerAmount * parlayOdds;
+  const potentialWinnings = bet.wagerAmount * (parlayOdds - 1);  // Subtract 1 to get profit only
 
   // Format the game time
   const gameTime = bet.gameTime ? new Date(bet.gameTime).toLocaleString('en-US', {
@@ -106,7 +106,7 @@ export default function BetCard({ bet }) {
                   </p>
                 </div>
                 <span className="text-sm font-medium text-gray-300">
-                  {b.odds > 0 ? "+" : ""}{b.odds}
+                  {b.odds.toFixed(2)}x
                 </span>
               </div>
             ))}
