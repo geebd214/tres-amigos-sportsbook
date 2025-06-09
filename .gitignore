@@ -74,3 +74,17 @@ coverage/
 # firestore.rules
 # storage.rules
 # firebase.json
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+service-account.json

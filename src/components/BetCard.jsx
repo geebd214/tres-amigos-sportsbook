@@ -1,6 +1,9 @@
 import { FaBasketballBall, FaFootballBall, FaBaseballBall } from 'react-icons/fa';
+import { debug } from "../utils/debug.js";
 
 export default function BetCard({ bet }) {
+  debug.info('Rendering BetCard with bet:', bet);
+  
   // Calculate parlay odds by multiplying decimal odds
   const parlayOdds = bet.bets?.reduce((oAcc, b) => {
     return oAcc * b.odds;
@@ -27,20 +30,27 @@ export default function BetCard({ bet }) {
 
   // Get sport icon based on the first bet's sport
   const getSportIcon = () => {
-    const firstBet = bet.bets?.[0];
-    if (!firstBet) return null;
-
-    const sportKey = firstBet.sportKey || firstBet.sport;
-    if (!sportKey) return null;
-
+    debug.info('Getting sport icon for bet:', bet);
+    const sport = bet.bets[0]?.sport;
+    debug.info('Sport from bet:', sport);
+    
+    if (!sport) {
+      debug.warn('No sport found in bet');
+      return null;
+    }
+    
+    const sportKey = sport.toLowerCase();
+    debug.info('Sport key:', sportKey);
+    
     switch (sportKey) {
-      case 'basketball_nba':
-        return <FaBasketballBall className="text-orange-500" />;
-      case 'americanfootball_nfl':
-        return <FaFootballBall className="text-blue-500" />;
       case 'baseball_mlb':
         return <FaBaseballBall className="text-red-500" />;
+      case 'basketball_nba':
+        return <FaBasketballBall className="text-orange-500" />;
+      case 'football_nfl':
+        return <FaFootballBall className="text-brown-500" />;
       default:
+        debug.warn(`No icon found for sport: ${sportKey}`);
         return null;
     }
   };

@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useCachedOdds } from "../hooks/useAppLogic";
 import { useNavigate } from "react-router-dom";
+import { debug } from "../utils/debug.js";
 
 export default function OddsBoard({ sports, onAddBet }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -55,6 +56,33 @@ export default function OddsBoard({ sports, onAddBet }) {
     };
 
     navigate('/make-bets', { state: { bet } });
+  };
+
+  const handleOddsClick = (game, market, selection) => {
+    debug.info('Odds clicked:', { game, market, selection });
+    
+    const newBet = {
+      id: Date.now(),
+      game: {
+        id: game.id,
+        sport: game.sport_key,
+        homeTeam: game.home_team,
+        awayTeam: game.away_team,
+        startTime: game.commence_time
+      },
+      market,
+      selection,
+      odds: selection.price,
+      timestamp: new Date().toISOString()
+    };
+    
+    debug.info('Created new bet:', newBet);
+    
+    setSelectedBets(prev => {
+      const updated = [...prev, newBet];
+      debug.info('Updated selected bets:', updated);
+      return updated;
+    });
   };
 
   if (!oddsData) {
