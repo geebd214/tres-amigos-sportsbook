@@ -113,8 +113,9 @@ export default function OddsBoard({ sports, onAddBet }) {
                     <li key={game.id} className="border-t border-gray-700 pt-4 first:border-t-0 first:pt-0">
                       <div className="flex justify-between items-start mb-2">
                         <div>
-                          <h4 className="font-semibold text-gray-200">{game.home_team}</h4>
-                          <h4 className="font-semibold text-gray-200">{game.away_team}</h4>
+                          <h4 className="font-semibold text-gray-200">
+                            {game.away_team} @ {game.home_team}
+                          </h4>
                           <p className="text-sm text-gray-400">
                             {new Date(game.commence_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </p>

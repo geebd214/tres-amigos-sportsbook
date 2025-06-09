@@ -126,6 +126,13 @@ export default function Dashboard({ user }) {
     return data;
   }, [myBets, timeRange]);
 
+  // Set selected date to latest date when chart data changes
+  useEffect(() => {
+    if (chartData.length > 0) {
+      setSelectedDate(chartData[chartData.length - 1].name);
+    }
+  }, [chartData]);
+
   const selectedBets = useMemo(() => {
     if (!selectedDate) return [];
     const dataPoint = chartData.find(point => point.name === selectedDate);
