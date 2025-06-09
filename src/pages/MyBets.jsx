@@ -96,7 +96,40 @@ export default function MyBets({ user }) {
 
       <div className="space-y-4">
         {filteredBets.map((bet) => (
-          <BetCard key={bet.id} bet={bet} />
+          <BetCard key={bet.id} bet={bet}>
+            <div className="flex flex-col gap-2">
+              {bet.bets.map((b, index) => (
+                <div key={index} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium">{b.team}</span>
+                    <span className="text-gray-500">({b.odds > 0 ? '+' : ''}{b.odds})</span>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-xs font-medium ${
+                    b.status === 'win' ? 'bg-green-100 text-green-800' :
+                    b.status === 'lose' ? 'bg-red-100 text-red-800' :
+                    'bg-gray-100 text-gray-800'
+                  }`}>
+                    {b.status || 'pending'}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2 mt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">Wager:</span>
+                <span className="font-medium">${bet.wagerAmount.toFixed(2)}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-gray-600">Potential Win:</span>
+                <span className="font-medium text-green-600">
+                  ${(bet.wagerAmount * bet.bets.reduce((acc, b) => {
+                    const dec = b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
+                    return acc * dec;
+                  }, 1)).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </BetCard>
         ))}
 
         {filteredBets.length === 0 && (

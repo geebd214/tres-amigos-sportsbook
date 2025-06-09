@@ -3,12 +3,14 @@
 import React, { useState, useMemo } from "react";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useCachedOdds } from "../hooks/useAppLogic";
+import { useNavigate } from "react-router-dom";
 
 export default function OddsBoard({ sports, onAddBet }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [collapsed, setCollapsed] = useState({});
   const [selectedBookmaker, setSelectedBookmaker] = useState("Bovada");
   const { oddsData, oddsLastUpdated, error } = useCachedOdds(selectedDate);
+  const navigate = useNavigate();
 
   // Get unique bookmakers from the odds data
   const bookmakers = useMemo(() => {
@@ -34,6 +36,25 @@ export default function OddsBoard({ sports, onAddBet }) {
 
   const toggleCollapse = (key) => {
     setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const onClick = async (game, market, team, odds, point) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
+    const bet = {
+      game,
+      market,
+      team,
+      odds,
+      point,
+      sportKey: game.sport_key,
+      gameTime: game.commence_time
+    };
+
+    navigate('/make-bets', { state: { bet } });
   };
 
   if (!oddsData) {
@@ -133,18 +154,9 @@ export default function OddsBoard({ sports, onAddBet }) {
                                   {market.outcomes.map((outcome, oi) => (
                                     <button
                                       key={oi}
-                                      onClick={() =>
-                                        onAddBet({
-                                          game: `${game.home_team} vs ${game.away_team}`,
-                                          market: market.key,
-                                          team: outcome.name,
-                                          odds: outcome.price,
-                                          point: outcome.point ?? null,
-                                          commence_time: game.commence_time,
-                                          spread: market.key === "spreads" ? outcome.point : null,
-                                          total: market.key === "totals" ? outcome.point : null,
-                                        })
-                                      }
+                                      onClick={() => {
+                                        onClick(game, market.key, outcome.name, outcome.price, outcome.point ?? null);
+                                      }}
                                       className="px-3 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-white text-sm border border-gray-600 transition-colors"
                                     >
                                       {outcome.name}

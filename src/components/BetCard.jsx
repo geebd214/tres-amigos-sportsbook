@@ -1,3 +1,5 @@
+import { FaBasketballBall, FaFootballBall, FaBaseballBall } from 'react-icons/fa';
+
 export default function BetCard({ bet }) {
   const parlayOdds = bet.bets?.reduce((oAcc, b) => {
     const dec = b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
@@ -7,6 +9,43 @@ export default function BetCard({ bet }) {
   const profitLoss = bet.status === "win"
     ? bet.wagerAmount * parlayOdds
     : -bet.wagerAmount;
+
+  const potentialWinnings = bet.wagerAmount * parlayOdds;
+
+  // Format the game time
+  const gameTime = bet.gameTime ? new Date(bet.gameTime).toLocaleString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  }) : '';
+
+  // Get unique games
+  const uniqueGames = [...new Set(bet.bets?.map(b => b.game))];
+
+  // Get sport icon based on the first bet's sport
+  const getSportIcon = () => {
+    const firstBet = bet.bets?.[0];
+    if (!firstBet) return null;
+
+    const sportKey = firstBet.sportKey || firstBet.sport;
+    if (!sportKey) return null;
+
+    switch (sportKey) {
+      case 'basketball_nba':
+        return <FaBasketballBall className="text-orange-500" />;
+      case 'americanfootball_nfl':
+        return <FaFootballBall className="text-blue-500" />;
+      case 'baseball_mlb':
+        return <FaBaseballBall className="text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const sportIcon = getSportIcon();
 
   return (
     <div 
@@ -19,37 +58,76 @@ export default function BetCard({ bet }) {
       }`}
     >
       <div className="flex justify-between items-start">
-        <div>
-          <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
-            bet.status === "win" 
-              ? "bg-green-900 text-green-200" 
-              : bet.status === "lose"
-              ? "bg-red-900 text-red-200"
-              : "bg-yellow-900 text-yellow-200"
-          }`}>
-            {bet.status.toUpperCase()}
-          </span>
-          {bet.bets?.map((b, i) => (
-            <p key={i} className="text-sm text-gray-300">
-              {b.team} ({b.odds > 0 ? "+" : ""}{b.odds})
+        <div className="w-full">
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center gap-2">
+              {sportIcon}
+              <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
+                bet.status === "win" 
+                  ? "bg-green-900 text-green-200" 
+                  : bet.status === "lose"
+                  ? "bg-red-900 text-red-200"
+                  : "bg-yellow-900 text-yellow-200"
+              }`}>
+                {bet.status.toUpperCase()}
+              </span>
+            </div>
+            <p className={`text-lg font-semibold ${
+              profitLoss >= 0 ? "text-green-400" : "text-red-400"
+            }`}>
+              {profitLoss >= 0 ? "+" : ""}${profitLoss.toFixed(2)}
             </p>
-          ))}
-        </div>
-        <div className="text-right">
-          <p className={`text-lg font-semibold ${
-            profitLoss >= 0 ? "text-green-400" : "text-red-400"
-          }`}>
-            {profitLoss >= 0 ? "+" : ""}${profitLoss.toFixed(2)}
-          </p>
+          </div>
+
+          {/* Game Information */}
+          <div className="mb-3 p-2 bg-gray-800/50 rounded-lg">
+            {uniqueGames.map((game, i) => (
+              <div key={i} className="mb-2 last:mb-0">
+                <p className="text-sm font-medium text-gray-200">
+                  {game}
+                </p>
+                <p className="text-xs text-gray-400">
+                  {gameTime}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Bet Details */}
+          <div className="space-y-2">
+            {bet.bets?.map((b, i) => (
+              <div key={i} className="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-300">
+                    {b.market === 'spreads' ? 'Spread' : b.market === 'totals' ? 'Total' : 'Moneyline'}
+                  </p>
+                  <p className="text-sm font-medium text-gray-200">
+                    {b.team} {b.point ? `(${b.point})` : ''}
+                  </p>
+                </div>
+                <span className="text-sm font-medium text-gray-300">
+                  {b.odds > 0 ? "+" : ""}{b.odds}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-      <div className="mt-2 pt-2 border-t border-gray-600">
-        <p className="mt-1 text-sm text-gray-300">
-          Wager: ${bet.wagerAmount.toFixed(2)}
-        </p>
-        <p className="text-sm text-gray-300">
-          Odds: {parlayOdds.toFixed(2)}x
-        </p>
+
+      <div className="mt-3 pt-3 border-t border-gray-600">
+        <div className="flex justify-between items-center">
+          <p className="text-sm text-gray-300">
+            Wager: ${bet.wagerAmount.toFixed(2)}
+          </p>
+          <p className="text-sm text-gray-300">
+            Odds: {parlayOdds.toFixed(2)}x
+          </p>
+        </div>
+        {bet.status === "pending" && (
+          <p className="mt-1 text-sm text-green-400">
+            Potential Win: ${potentialWinnings.toFixed(2)}
+          </p>
+        )}
       </div>
     </div>
   );
