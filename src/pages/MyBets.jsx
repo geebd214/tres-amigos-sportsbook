@@ -17,22 +17,23 @@ export default function MyBets({ user }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { myBets } = useUserBets(user);
-  
-  console.log('All bets:', myBets);
-  console.log('Selected date:', selectedDate);
 
-const filteredBets = useFilteredBets(
-  myBets.filter((bet) =>
-    bet.bets?.some((b) => {
-      if (!b.startTime) return false;
-      return new Date(b.startTime).toDateString() === selectedDate.toDateString();
-    })
-  ),
-  statusFilter
-);
+  console.log("All bets:", myBets);
+  console.log("Selected date:", selectedDate);
 
-  
-  console.log('Filtered bets:', filteredBets);
+  const filteredBets = useFilteredBets(
+    myBets.filter((bet) =>
+      bet.bets?.some((b) => {
+        if (!b.startTime) return false;
+        return (
+          new Date(b.startTime).toDateString() === selectedDate.toDateString()
+        );
+      }),
+    ),
+    statusFilter,
+  );
+
+  console.log("Filtered bets:", filteredBets);
 
   const handlePrevious = () => {
     const prev = new Date(selectedDate);
@@ -86,13 +87,19 @@ const filteredBets = useFilteredBets(
       </div>
 
       <div className="mb-4 flex items-center justify-center gap-4">
-        <button onClick={handlePrevious} className="p-2 bg-gray-700 rounded-full hover:bg-gray-600">
+        <button
+          onClick={handlePrevious}
+          className="p-2 bg-gray-700 rounded-full hover:bg-gray-600"
+        >
           <FaChevronLeft />
         </button>
         <div className="text-lg font-semibold">
           {getFormattedDate(selectedDate)}
         </div>
-        <button onClick={handleNext} className="p-2 bg-gray-700 rounded-full hover:bg-gray-600">
+        <button
+          onClick={handleNext}
+          className="p-2 bg-gray-700 rounded-full hover:bg-gray-600"
+        >
           <FaChevronRight />
         </button>
       </div>
@@ -102,17 +109,27 @@ const filteredBets = useFilteredBets(
           <BetCard key={bet.id} bet={bet}>
             <div className="flex flex-col gap-2">
               {bet.bets.map((b, index) => (
-                <div key={index} className="flex items-center justify-between text-sm">
+                <div
+                  key={index}
+                  className="flex items-center justify-between text-sm"
+                >
                   <div className="flex items-center gap-2">
                     <span className="font-medium">{b.team}</span>
-                    <span className="text-gray-500">({b.odds > 0 ? '+' : ''}{b.odds})</span>
+                    <span className="text-gray-500">
+                      ({b.odds > 0 ? "+" : ""}
+                      {b.odds})
+                    </span>
                   </div>
-                  <span className={`px-2 py-1 rounded text-xs font-medium ${
-                    b.status === 'win' ? 'bg-green-100 text-green-800' :
-                    b.status === 'lose' ? 'bg-red-100 text-red-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {b.status || 'pending'}
+                  <span
+                    className={`px-2 py-1 rounded text-xs font-medium ${
+                      b.status === "win"
+                        ? "bg-green-100 text-green-800"
+                        : b.status === "lose"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {b.status || "pending"}
                   </span>
                 </div>
               ))}
@@ -120,15 +137,24 @@ const filteredBets = useFilteredBets(
             <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2 mt-2">
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">Wager:</span>
-                <span className="font-medium">${bet.wagerAmount.toFixed(2)}</span>
+                <span className="font-medium">
+                  ${bet.wagerAmount.toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-gray-600">Potential Win:</span>
                 <span className="font-medium text-green-600">
-                  ${(bet.wagerAmount * bet.bets.reduce((acc, b) => {
-                    const dec = b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
-                    return acc * dec;
-                  }, 1)).toFixed(2)}
+                  $
+                  {(
+                    bet.wagerAmount *
+                    bet.bets.reduce((acc, b) => {
+                      const dec =
+                        b.odds > 0
+                          ? b.odds / 100 + 1
+                          : 100 / Math.abs(b.odds) + 1;
+                      return acc * dec;
+                    }, 1)
+                  ).toFixed(2)}
                 </span>
               </div>
             </div>

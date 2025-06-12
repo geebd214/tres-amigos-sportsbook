@@ -3,7 +3,7 @@ import { ODDS_API_KEY } from "../config/oddsApi.js";
 import { debug } from "./debug.js";
 
 //const SPORTS = ['basketball_nba', 'football_nfl', 'baseball_mlb'];
-const SPORTS = ['baseball_mlb']
+const SPORTS = ["baseball_mlb"];
 
 export async function fetchAllOdds() {
   const allOdds = [];
@@ -11,8 +11,10 @@ export async function fetchAllOdds() {
   for (const sport of SPORTS) {
     try {
       debug.info(`Fetching odds for ${sport}`);
-      const res = await fetch(`https://api.the-odds-api.com/v4/sports/${sport}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals`);
-      
+      const res = await fetch(
+        `https://api.the-odds-api.com/v4/sports/${sport}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals`,
+      );
+
       if (!res.ok) {
         const errorText = await res.text();
         debug.error(`Failed to fetch odds for ${sport}:`, errorText);
@@ -29,7 +31,7 @@ export async function fetchAllOdds() {
   }
 
   if (allOdds.length === 0) {
-    debug.warn('No odds data received from API');
+    debug.warn("No odds data received from API");
   } else {
     debug.info(`Total games fetched: ${allOdds.length}`);
   }

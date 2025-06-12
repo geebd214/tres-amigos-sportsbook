@@ -46,7 +46,7 @@ export default function AdminPage() {
   const handleSave = async (id) => {
     await updateDoc(doc(db, "bets", id), { status: editedStatus });
     setBets((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: editedStatus } : b))
+      prev.map((b) => (b.id === id ? { ...b, status: editedStatus } : b)),
     );
     setEditId(null);
   };
@@ -58,7 +58,10 @@ export default function AdminPage() {
       <h2 className="text-2xl font-bold mb-4">Admin: Manage Bets</h2>
       <ul className="space-y-4">
         {bets.map((bet) => (
-          <li key={bet.id} className="border border-gray-600 bg-gray-800 p-4 rounded">
+          <li
+            key={bet.id}
+            className="border border-gray-600 bg-gray-800 p-4 rounded"
+          >
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-sm text-gray-400">
