@@ -1,6 +1,4 @@
-// File: pages/AdminPage.jsx
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { db } from "../firebase";
 import {
   collection,
@@ -12,25 +10,71 @@ import {
   orderBy,
 } from "firebase/firestore";
 
+const PAGE_SIZE = 10;
+
 export default function AdminPage() {
   const [bets, setBets] = useState([]);
+  const [filteredBets, setFilteredBets] = useState([]);
+  const [uniqueUsers, setUniqueUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editId, setEditId] = useState(null);
   const [editedStatus, setEditedStatus] = useState("");
 
+  // Filters
+  const [userFilter, setUserFilter] = useState("");
+  const [startDate, setStartDate] = useState("");
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
     const fetchBets = async () => {
+      setLoading(true);
       const q = query(collection(db, "bets"), orderBy("createdAt", "desc"));
       const snapshot = await getDocs(q);
       const fetched = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
+
       setBets(fetched);
+
+      // Unique users for dropdown
+      const users = Array.from(
+        new Set(fetched.map((b) => b.userName).filter(Boolean))
+      ).sort();
+      setUniqueUsers(users);
+
       setLoading(false);
     };
     fetchBets();
   }, []);
+
+  useEffect(() => {
+    let filtered = [...bets];
+
+    if (userFilter) {
+      filtered = filtered.filter((b) => b.userName === userFilter);
+    }
+
+    if (startDate) {
+      const start = new Date(startDate);
+      filtered = filtered.filter(
+        (b) => b.createdAt?.toDate?.() >= start
+      );
+    }
+
+    setFilteredBets(filtered);
+    setCurrentPage(1); // Reset pagination when filters change
+  }, [bets, userFilter, startDate]);
+
+  const paginatedSlips = useMemo(() => {
+    const startIdx = (currentPage - 1) * PAGE_SIZE;
+    return filteredBets.slice(startIdx, startIdx + PAGE_SIZE);
+  }, [filteredBets, currentPage]);
+
+
+  const totalPages = Math.ceil(filteredBets.length / PAGE_SIZE);
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this bet?")) return;
@@ -46,9 +90,14 @@ export default function AdminPage() {
   const handleSave = async (id) => {
     await updateDoc(doc(db, "bets", id), { status: editedStatus });
     setBets((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: editedStatus } : b)),
+      prev.map((b) => (b.id === id ? { ...b, status: editedStatus } : b))
     );
     setEditId(null);
+  };
+
+  const clearFilters = () => {
+    setUserFilter("");
+    setStartDate("");
   };
 
   if (loading) return <p className="p-4">Loading bets...</p>;
@@ -56,8 +105,47 @@ export default function AdminPage() {
   return (
     <div className="p-6 text-white">
       <h2 className="text-2xl font-bold mb-4">Admin: Manage Bets</h2>
+
+      {/* Filters */}
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-end">
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-300 mb-1">Filter by User</label>
+          <select
+            value={userFilter}
+            onChange={(e) => setUserFilter(e.target.value)}
+            className="h-10 px-3 py-1 text-sm bg-gray-700 text-white border border-gray-500 rounded"
+          >
+            <option value="">All Users</option>
+            {uniqueUsers.map((user) => (
+              <option key={user} value={user}>
+                {user}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-300 mb-1">Start Date</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="h-10 px-3 py-1 text-sm bg-gray-700 text-white border border-gray-500 rounded"
+          />
+        </div>
+        <div className="flex flex-col">
+          <label className="text-sm text-gray-300 mb-1 invisible">Clear</label>
+          <button
+            onClick={clearFilters}
+            className="h-10 px-3 py-1 text-sm bg-gray-700 text-white border border-gray-500 rounded"
+          >
+            Clear Filters
+          </button>
+        </div>
+      </div>
+
+
       <ul className="space-y-4">
-        {bets.map((bet) => (
+        {paginatedSlips.map((bet) => (
           <li
             key={bet.id}
             className="border border-gray-600 bg-gray-800 p-4 rounded"
@@ -119,6 +207,29 @@ export default function AdminPage() {
           </li>
         ))}
       </ul>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6 gap-2">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+          <span className="text-sm text-gray-300 self-center">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-gray-700 text-white rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }
