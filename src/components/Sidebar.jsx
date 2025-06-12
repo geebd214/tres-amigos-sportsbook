@@ -6,7 +6,7 @@ import {
   FaDollarSign,
   FaUserShield,
   FaTachometerAlt,
-  FaHatCowboy
+  FaHatCowboy,
 } from "react-icons/fa";
 
 const baseLinks = [
@@ -22,7 +22,7 @@ export default function Sidebar({ user }) {
 
   useEffect(() => {
     if (user) {
-      user.getIdTokenResult().then(token => {
+      user.getIdTokenResult().then((token) => {
         setIsAdmin(token.claims.admin === true);
       });
     }

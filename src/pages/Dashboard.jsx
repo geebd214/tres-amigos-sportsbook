@@ -1,7 +1,16 @@
 // File: pages/Dashboard.jsx
 
 import { useEffect, useMemo, useState } from "react";
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceDot } from "recharts";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid,
+  ReferenceDot,
+} from "recharts";
 import { collection, query, where, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import BetCard from "../components/BetCard";
@@ -9,8 +18,8 @@ import BetCard from "../components/BetCard";
 // Helper to handle Firestore Timestamp or ISO string
 function getCreatedAtDate(createdAt) {
   if (!createdAt) return null;
-  if (typeof createdAt.toDate === 'function') return createdAt.toDate();
-  if (typeof createdAt === 'string') return new Date(createdAt);
+  if (typeof createdAt.toDate === "function") return createdAt.toDate();
+  if (typeof createdAt === "string") return new Date(createdAt);
   return createdAt;
 }
 
@@ -23,23 +32,23 @@ export default function Dashboard({ user }) {
     if (!user) return;
     const q = query(collection(db, "bets"), where("userId", "==", user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const bets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const bets = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setMyBets(bets);
     });
     return () => unsubscribe();
   }, [user]);
 
   const chartData = useMemo(() => {
-    const timeRanges = { 
-      "1w": 7, 
-      "1m": 30, 
-      "all": Infinity 
+    const timeRanges = {
+      "1w": 7,
+      "1m": 30,
+      all: Infinity,
     };
 
     // First, filter bets by time range and status
     const filteredBets = myBets
-      .filter(bet => bet.status === "win" || bet.status === "lose")
-      .filter(bet => {
+      .filter((bet) => bet.status === "win" || bet.status === "lose")
+      .filter((bet) => {
         if (timeRange === "all" || !bet.createdAt) return true;
         const days = timeRanges[timeRange];
         const createdAtDate = getCreatedAtDate(bet.createdAt);
@@ -51,20 +60,20 @@ export default function Dashboard({ user }) {
     const betsByDate = filteredBets.reduce((acc, bet) => {
       const createdAtDate = getCreatedAtDate(bet.createdAt);
       let date;
-      
+
       if (timeRange === "1w") {
         // For weekly view, group by day
         date = createdAtDate.toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",
-          day: "numeric"
+          day: "numeric",
         });
       } else {
         // For monthly and all view, group by date
         date = createdAtDate.toLocaleDateString("en-US", {
           year: "numeric",
           month: "2-digit",
-          day: "2-digit"
+          day: "2-digit",
         });
       }
 
@@ -82,13 +91,16 @@ export default function Dashboard({ user }) {
       .map(([date, bets]) => {
         // Calculate total change for all bets in this time period
         const periodChange = bets.reduce((total, bet) => {
-          const parlayOdds = bet.bets?.reduce((oAcc, b) => {
-            const dec = b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
-            return oAcc * dec;
-          }, 1) ?? 1;
-          const change = bet.status === "win"
-            ? bet.wagerAmount * parlayOdds
-            : -bet.wagerAmount;
+          const parlayOdds =
+            bet.bets?.reduce((oAcc, b) => {
+              const dec =
+                b.odds > 0 ? b.odds / 100 + 1 : 100 / Math.abs(b.odds) + 1;
+              return oAcc * dec;
+            }, 1) ?? 1;
+          const change =
+            bet.status === "win"
+              ? bet.wagerAmount * parlayOdds
+              : -bet.wagerAmount;
           return total + change;
         }, 0);
 
@@ -97,7 +109,7 @@ export default function Dashboard({ user }) {
           name: date,
           total: runningTotal,
           bets,
-          dailyChange: periodChange
+          dailyChange: periodChange,
         };
       });
 
@@ -105,21 +117,21 @@ export default function Dashboard({ user }) {
     if (data.length === 0) {
       const now = new Date();
       let defaultDate;
-      
+
       if (timeRange === "1w") {
         defaultDate = now.toLocaleDateString("en-US", {
           weekday: "short",
           month: "short",
-          day: "numeric"
+          day: "numeric",
         });
       } else {
         defaultDate = now.toLocaleDateString("en-US", {
           year: "numeric",
           month: "2-digit",
-          day: "2-digit"
+          day: "2-digit",
         });
       }
-      
+
       data.push({ name: defaultDate, total: 0, bets: [], dailyChange: 0 });
     }
 
@@ -135,7 +147,7 @@ export default function Dashboard({ user }) {
 
   const selectedBets = useMemo(() => {
     if (!selectedDate) return [];
-    const dataPoint = chartData.find(point => point.name === selectedDate);
+    const dataPoint = chartData.find((point) => point.name === selectedDate);
     return dataPoint?.bets || [];
   }, [selectedDate, chartData]);
 
@@ -163,7 +175,10 @@ export default function Dashboard({ user }) {
       </style>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold">
-          📈 Total Winnings: ${chartData.length > 0 ? chartData[chartData.length - 1].total.toFixed(2) : "0.00"}
+          📈 Total Winnings: $
+          {chartData.length > 0
+            ? chartData[chartData.length - 1].total.toFixed(2)
+            : "0.00"}
         </h2>
         <div className="flex gap-2">
           <button
@@ -195,18 +210,19 @@ export default function Dashboard({ user }) {
             margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
           >
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="name" 
+            <XAxis
+              dataKey="name"
               tickFormatter={(value) => {
                 const date = new Date(value);
-                return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                return date.toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                });
               }}
             />
-            <YAxis 
-              tickFormatter={(value) => `$${value}`}
-            />
-            <Tooltip 
-              cursor={{ stroke: '#8884d8', strokeWidth: 1 }}
+            <YAxis tickFormatter={(value) => `$${value}`} />
+            <Tooltip
+              cursor={{ stroke: "#8884d8", strokeWidth: 1 }}
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
                   const data = payload[0].payload;
@@ -217,12 +233,19 @@ export default function Dashboard({ user }) {
                           weekday: "short",
                           month: "short",
                           day: "numeric",
-                          year: "numeric"
+                          year: "numeric",
                         })}
                       </p>
-                      <p className="text-gray-400">Total: ${data.total.toFixed(2)}</p>
-                      <p className="text-gray-400">Daily Change: ${data.dailyChange.toFixed(2)}</p>
-                      <p className="text-sm text-gray-500">{data.bets.length} bet{data.bets.length !== 1 ? 's' : ''}</p>
+                      <p className="text-gray-400">
+                        Total: ${data.total.toFixed(2)}
+                      </p>
+                      <p className="text-gray-400">
+                        Daily Change: ${data.dailyChange.toFixed(2)}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {data.bets.length} bet
+                        {data.bets.length !== 1 ? "s" : ""}
+                      </p>
                     </div>
                   );
                 }
@@ -254,7 +277,10 @@ export default function Dashboard({ user }) {
       </div>
 
       {selectedDate && (
-        <div className="mt-4 bg-gray-800 rounded-lg shadow p-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 400px)' }}>
+        <div
+          className="mt-4 bg-gray-800 rounded-lg shadow p-4 overflow-y-auto"
+          style={{ maxHeight: "calc(100vh - 400px)" }}
+        >
           <h3 className="text-lg font-semibold mb-3 text-gray-200">
             Bets for {selectedDate}
           </h3>
