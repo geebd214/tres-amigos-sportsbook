@@ -1,4 +1,11 @@
 // src/config/oddsApi.js
-//export const ODDS_API_KEY = "79f25bb5983cb4d3ccf2f655e84d8e7c"; // midgar
-//export const ODDS_API_KEY = "bdd29c69eb49e9970fbdbc9f498faf11"; // brandon.gee
-export const ODDS_API_KEY = "debug";
+// Load the Odds API key from environment variables so keys are not committed
+// to source control. The value will be pulled from the Node environment when
+// running scripts or from Vite's injected variables in the browser.
+
+const nodeKey =
+  typeof process !== 'undefined' ? process.env.ODDS_API_KEY : undefined;
+const browserKey =
+  typeof import.meta !== 'undefined' ? import.meta.env?.VITE_ODDS_API_KEY : undefined;
+
+export const ODDS_API_KEY = nodeKey || browserKey || "";

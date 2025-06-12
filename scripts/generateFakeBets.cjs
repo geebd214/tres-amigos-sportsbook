@@ -2,15 +2,19 @@ const { initializeApp } = require('firebase/app');
 const { getFirestore, collection, addDoc } = require('firebase/firestore');
 const admin = require('firebase-admin');
 const serviceAccount = require('../service-account.json');
+const dotenv = require('dotenv');
+
+// Load environment variables from a local .env file if present
+dotenv.config();
 
 // Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyCAHNsdxpBC2TSNXvJI2Vt6uiD8eJkN3_4",
-  authDomain: "tres-amigos-sportsbook.firebaseapp.com",
-  projectId: "tres-amigos-sportsbook",
-  storageBucket: "tres-amigos-sportsbook.firebasestorage.app",
-  messagingSenderId: "186812042455",
-  appId: "1:186812042455:web:4d9638a02cb59345a57492"
+  apiKey: process.env.FIREBASE_API_KEY,
+  authDomain: process.env.FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.FIREBASE_APP_ID
 };
 
 // Initialize Firebase
