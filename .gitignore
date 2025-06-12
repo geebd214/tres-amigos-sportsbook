@@ -11,17 +11,21 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-.firebase
-*.local
 
-# Environment variables and secrets
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+service-account.json
+service-account*.json
+
+# Secrets
 .env
 .env.local
 .env.development
 .env.test
 .env.production
 *.env
-service-account*.json
 firebase-credentials*.json
 google-credentials*.json
 
@@ -44,6 +48,7 @@ out/
 # Cache
 .cache/
 .npm/
+cache/
 .eslintcache
 .stylelintcache
 
@@ -60,31 +65,3 @@ coverage/
 *.pfx
 *.der
 *.p8
-*.pem
-*.key
-*.cert
-*.crt
-*.p12
-*.pfx
-*.der
-*.p8
-
-# Firebase
-# DO NOT ignore these files - they should be tracked in git
-# firestore.rules
-# storage.rules
-# firebase.json
-
-# Environment files
-.env
-.env.local
-.env.*.local
-.env.development
-.env.test
-.env.production
-
-# Firebase
-.firebase/
-firebase-debug.log
-firebase-debug.*.log
-service-account.json
