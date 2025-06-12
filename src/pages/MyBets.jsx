@@ -18,8 +18,6 @@ export default function MyBets({ user }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const { myBets } = useUserBets(user);
 
-  console.log("All bets:", myBets);
-  console.log("Selected date:", selectedDate);
 
   const filteredBets = useFilteredBets(
     myBets.filter((bet) =>
@@ -33,7 +31,6 @@ export default function MyBets({ user }) {
     statusFilter,
   );
 
-  console.log("Filtered bets:", filteredBets);
 
   const handlePrevious = () => {
     const prev = new Date(selectedDate);

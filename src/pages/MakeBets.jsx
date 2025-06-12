@@ -33,14 +33,6 @@ export default function MakeBets() {
       status: "pending",
     };
     try {
-      console.log(
-        "🧾 Submitting slip:",
-        JSON.stringify(
-          slip,
-          (key, value) => (value === undefined ? "[undefined]" : value),
-          2,
-        ),
-      );
 
       for (const [i, b] of bets.entries()) {
         const requiredFields = [

@@ -21,8 +21,6 @@ const ODDS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 export function useUserBets(user) {
   const [myBets, setMyBets] = useState([]);
 
-  console.log("user in useUserBets:", user);
-
   useEffect(() => {
     if (!user?.uid) return; // ✅ safer check
 
