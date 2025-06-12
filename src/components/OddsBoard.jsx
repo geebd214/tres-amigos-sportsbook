@@ -6,7 +6,7 @@ import { useCachedOdds } from "../hooks/useAppLogic";
 import { useNavigate } from "react-router-dom";
 import { debug } from "../utils/debug.js";
 
-export default function OddsBoard({ sports, onAddBet }) {
+export default function OddsBoard({ sports, onAddBet, user }) {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [collapsed, setCollapsed] = useState({});
   const [selectedBookmaker, setSelectedBookmaker] = useState("Bovada");
@@ -39,51 +39,33 @@ export default function OddsBoard({ sports, onAddBet }) {
     setCollapsed(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const onClick = async (game, market, team, odds, point) => {
-    if (!user) {
-      navigate('/login');
-      return;
-    }
+const onClick = async (game, market, team, odds, point) => {
+  if (!user) {
+    navigate('/login');
+    return;
+  }
 
-    const bet = {
-      game,
-      market,
-      team,
-      odds,
-      point,
-      sportKey: game.sport_key,
-      gameTime: game.commence_time
-    };
-
-    navigate('/make-bets', { state: { bet } });
+  const marketTypeMap = {
+    h2h: 'moneyline',
+    spreads: 'spreads',
+    totals: 'totals'
   };
 
-  const handleOddsClick = (game, market, selection) => {
-    debug.info('Odds clicked:', { game, market, selection });
-    
-    const newBet = {
-      id: Date.now(),
-      game: {
-        id: game.id,
-        sport: game.sport_key,
-        homeTeam: game.home_team,
-        awayTeam: game.away_team,
-        startTime: game.commence_time
-      },
-      market,
-      selection,
-      odds: selection.price,
-      timestamp: new Date().toISOString()
-    };
-    
-    debug.info('Created new bet:', newBet);
-    
-    setSelectedBets(prev => {
-      const updated = [...prev, newBet];
-      debug.info('Updated selected bets:', updated);
-      return updated;
-    });
+  const bet = {
+    gameId: game.id,
+    game: `${game.away_team} vs ${game.home_team}`,
+    market,
+    marketType: marketTypeMap[market],
+    team,
+    odds,
+    point: point ?? null,  // ✅ Default to null
+    sportKey: game.sport_key,
+    commence_time: game.commence_time
   };
+
+  onAddBet(bet);
+};
+
 
   if (!oddsData) {
     return <p className="text-gray-400">Loading odds...</p>;
@@ -101,29 +83,50 @@ export default function OddsBoard({ sports, onAddBet }) {
 
   return (
     <div className="w-full space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-        <div className="flex items-center gap-4">
-          <button onClick={handlePrevious} className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 text-white">
-            <FaChevronLeft />
-          </button>
-          <div className="text-lg font-semibold text-white">
-            {selectedDate.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-          </div>
-          <button onClick={handleNext} className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 text-white">
-            <FaChevronRight />
-          </button>
-        </div>
-        <select
-  value={selectedBookmaker}
-  onChange={(e) => setSelectedBookmaker(e.target.value)}
-  className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1 text-white hover:bg-gray-700"
->
-  {bookmakers.map(bm => (
-    <option key={bm} value={bm}>{bm}</option>
-  ))}
-</select>
-
+<div className="w-full flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+  {/* Date Selector - always centered */}
+  <div className="flex justify-center">
+    <div className="flex items-center gap-4">
+      <button
+        onClick={handlePrevious}
+        className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 text-white"
+      >
+        <FaChevronLeft />
+      </button>
+      <div className="text-lg font-semibold text-white">
+        {selectedDate.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })}
       </div>
+      <button
+        onClick={handleNext}
+        className="p-2 bg-gray-700 rounded-full hover:bg-gray-600 text-white"
+      >
+        <FaChevronRight />
+      </button>
+    </div>
+  </div>
+
+  {/* Bookmaker Dropdown - on new row on mobile, right on desktop */}
+  <div className="flex justify-center sm:justify-end">
+    <select
+      value={selectedBookmaker}
+      onChange={(e) => setSelectedBookmaker(e.target.value)}
+      className="bg-gray-800 border border-gray-700 rounded-lg px-3 py-1 text-white hover:bg-gray-700"
+    >
+      {bookmakers.map((bm) => (
+        <option key={bm} value={bm}>
+          {bm}
+        </option>
+      ))}
+    </select>
+  </div>
+</div>
+
+
+
 
       {error && (
         <div className="bg-yellow-900/50 border-2 border-yellow-500 text-yellow-200 px-4 py-2 rounded-lg shadow-lg">

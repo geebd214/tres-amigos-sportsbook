@@ -2,12 +2,13 @@
 import { ODDS_API_KEY } from "../config/oddsApi.js";
 import { debug } from "./debug.js";
 
+//const SPORTS = ['basketball_nba', 'football_nfl', 'baseball_mlb'];
+const SPORTS = ['baseball_mlb']
+
 export async function fetchAllOdds() {
-  //const sports = ["basketball_nba", "americanfootball_nfl", "baseball_mlb"];
-  const sports = ["baseball_mlb"];
   const allOdds = [];
 
-  for (const sport of sports) {
+  for (const sport of SPORTS) {
     try {
       debug.info(`Fetching odds for ${sport}`);
       const res = await fetch(`https://api.the-odds-api.com/v4/sports/${sport}/odds?apiKey=${ODDS_API_KEY}&regions=us&markets=h2h,spreads,totals`);

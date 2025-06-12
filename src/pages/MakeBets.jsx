@@ -32,6 +32,18 @@ export default function MakeBets() {
       status: "pending",
     };
     try {
+      console.log("🧾 Submitting slip:", JSON.stringify(slip, (key, value) =>
+  value === undefined ? "[undefined]" : value, 2));
+
+      for (const [i, b] of bets.entries()) {
+  const requiredFields = ['gameId', 'game', 'market', 'marketType', 'team', 'odds', 'sport', 'startTime'];
+  for (const field of requiredFields) {
+    if (b[field] === undefined) {
+      console.error(`❌ Missing field in bet[${i}]:`, field, b);
+      return;
+    }
+  }
+}
       await addDoc(collection(db, "bets"), slip);
       setBets([]);
       setWagerAmount(100);
@@ -63,10 +75,19 @@ export default function MakeBets() {
           />
         </div>
         <div className="w-full lg:flex-1 order-2 lg:order-1">
-          <OddsBoard
-            sports={SPORTS}
-            onAddBet={(bet) => setBets(prev => [...prev, bet])}
-          />
+<OddsBoard
+  sports={SPORTS}
+  onAddBet={(bet) => {
+  const enrichedBet = {
+    ...bet,
+sport: bet.sportKey ?? 'unknown_sport',
+startTime: bet.commence_time ?? null
+  };
+  setBets(prev => [...prev, enrichedBet]);
+}}
+
+  user={user}
+/>
         </div>
       </div>
     </div>

@@ -44,11 +44,11 @@ export default function BetCard({ bet }) {
     
     switch (sportKey) {
       case 'baseball_mlb':
-        return <FaBaseballBall className="text-red-500" />;
+        return <FaBaseballBall />;
       case 'basketball_nba':
-        return <FaBasketballBall className="text-orange-500" />;
+        return <FaBasketballBall />;
       case 'football_nfl':
-        return <FaFootballBall className="text-brown-500" />;
+        return <FaFootballBall />;
       default:
         debug.warn(`No icon found for sport: ${sportKey}`);
         return null;
@@ -71,7 +71,6 @@ export default function BetCard({ bet }) {
         <div className="w-full">
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
-              {sportIcon}
               <span className={`inline-block px-2 py-1 rounded text-sm font-medium ${
                 bet.status === "win" 
                   ? "bg-green-900 text-green-200" 
@@ -89,42 +88,72 @@ export default function BetCard({ bet }) {
             </p>
           </div>
 
-          {/* Game Information */}
-          <div className="mb-3 p-2 bg-gray-800/50 rounded-lg">
-            {uniqueGames.map((game, i) => (
-              <div key={i} className="mb-2 last:mb-0">
-                <p className="text-sm font-medium text-gray-200">
-                  {game}
-                </p>
-                <p className="text-xs text-gray-400">
-                  {gameTime}
-                </p>
-              </div>
-            ))}
-          </div>
+{/* Game + Bet Info in Two Columns */}
+<div className="mb-3 p-2 bg-gray-800/50 rounded-lg">
 
-          {/* Bet Details */}
-          <div className="space-y-2">
-            {bet.bets?.map((b, i) => (
-              <div key={i} className="flex items-center justify-between p-2 bg-gray-800/30 rounded-lg">
-                <div>
-                  <p className="text-sm text-gray-300">
-                    {b.market === 'spreads' ? 'Spread' : b.market === 'totals' ? 'Total' : 'Moneyline'}
-                  </p>
-                  <p className="text-sm font-medium text-gray-200">
-                    {b.team} {b.point ? `(${b.point})` : ''}
-                  </p>
-                </div>
-                <span className="text-sm font-medium text-gray-300">
-                  {b.odds.toFixed(2)}x
-                </span>
-              </div>
-            ))}
-          </div>
+  {bet.bets
+  ?.slice()
+  .sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
+  .map((b, i) => (
+    <div
+      key={i}
+      className="flex justify-between items-start border-b border-gray-700 last:border-b-0 py-2"
+    >
+      <div className="flex gap-2">
+        {/* Sport Icon */}
+        <div className="pt-1">{getSportIcon(b.sport)}</div>
+
+        {/* Bet Details */}
+        <div className="flex flex-col text-sm text-gray-200">
+                   <span className="text-xs text-gray-400">
+            {b.startTime
+              ? new Date(b.startTime).toLocaleString("en-US", {
+                  weekday: "short",
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })
+              : "Start time unknown"}
+          </span>
+          <span className="font-medium">{b.game}</span>
+ 
+          <span className="text-sm text-gray-300 mt-1">
+            ➤ {b.team}{" "}
+            {b.market === "spreads" && b.point !== null ? `(${b.point}) ` : ""}
+            <span className="uppercase">{b.market}</span>
+          </span>
+        </div>
+      </div>
+
+      {/* Odds */}
+      <div className="text-sm font-semibold text-right text-gray-200 min-w-[60px]">
+        {b.odds.toFixed(2)}x
+      </div>
+    </div>
+  ))}
+
+</div>
+
+
+
+
         </div>
       </div>
 
       <div className="mt-3 pt-3 border-t border-gray-600">
+          <p className="text-xs text-gray-400 mb-2">
+    Bet placed:{" "}
+    {bet.createdAt?.toDate
+      ? bet.createdAt.toDate().toLocaleString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "—"}
+  </p>
         <div className="flex justify-between items-center">
           <p className="text-sm text-gray-300">
             Wager: ${bet.wagerAmount.toFixed(2)}

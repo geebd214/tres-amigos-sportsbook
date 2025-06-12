@@ -21,13 +21,16 @@ export default function MyBets({ user }) {
   console.log('All bets:', myBets);
   console.log('Selected date:', selectedDate);
 
-  const filteredBets = useFilteredBets(
-    myBets.filter((bet) => {
-      const createdAt = bet.createdAt?.toDate?.();
-      return createdAt?.toDateString?.() === selectedDate.toDateString();
-    }),
-    statusFilter
-  );
+const filteredBets = useFilteredBets(
+  myBets.filter((bet) =>
+    bet.bets?.some((b) => {
+      if (!b.startTime) return false;
+      return new Date(b.startTime).toDateString() === selectedDate.toDateString();
+    })
+  ),
+  statusFilter
+);
+
   
   console.log('Filtered bets:', filteredBets);
 

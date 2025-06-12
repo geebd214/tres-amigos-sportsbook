@@ -21,15 +21,19 @@ const ODDS_CACHE_TTL = 60 * 60 * 1000; // 1 hour
 export function useUserBets(user) {
   const [myBets, setMyBets] = useState([]);
 
-  useEffect(() => {
-    if (!user) return;
-    const q = query(collection(db, "bets"), where("userId", "==", user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const bets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setMyBets(bets);
-    });
-    return () => unsubscribe();
-  }, [user]);
+  console.log('user in useUserBets:', user);
+
+useEffect(() => {
+  if (!user?.uid) return; // ✅ safer check
+
+  const q = query(collection(db, "bets"), where("userId", "==", user.uid));
+  const unsubscribe = onSnapshot(q, (snapshot) => {
+    const bets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setMyBets(bets);
+  });
+
+  return () => unsubscribe();
+}, [user?.uid]); // ✅ include uid in dependency array
 
   return { myBets, setMyBets };
 }
