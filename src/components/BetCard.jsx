@@ -21,26 +21,10 @@ export default function BetCard({ bet }) {
 
   const potentialWinnings = bet.wagerAmount * (parlayOdds - 1); // Subtract 1 to get profit only
 
-  // Format the game time
-  const gameTime = bet.gameTime
-    ? new Date(bet.gameTime).toLocaleString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-        timeZoneName: "short",
-      })
-    : "";
-
-  // Get unique games
-  const uniqueGames = [...new Set(bet.bets?.map((b) => b.game))];
-
   // Get sport icon based on the first bet's sport
-  const getSportIcon = () => {
-    debug.info("Getting sport icon for bet:", bet);
-    const sport = bet.bets[0]?.sport;
-    debug.info("Sport from bet:", sport);
+  const getSportIcon = (sportParam) => {
+    const sport = sportParam ?? bet.bets[0]?.sport;
+    debug.info("Getting sport icon for sport:", sport);
 
     if (!sport) {
       debug.warn("No sport found in bet");
@@ -62,8 +46,6 @@ export default function BetCard({ bet }) {
         return null;
     }
   };
-
-  const sportIcon = getSportIcon();
 
   return (
     <div
