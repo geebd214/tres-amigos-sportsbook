@@ -5,9 +5,6 @@ import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { fetchScoresFromOddsAPI } from './oddsApi.node.js';
 
-// Load environment variables
-dotenv.config();
-
 // Load Firebase Admin credentials
 const serviceAccount = JSON.parse(fs.readFileSync('./service-account.json', 'utf8'));
 
@@ -44,8 +41,10 @@ function isBetWinning(bet, finalScore) {
 
 async function updateBetResults() {
   const gameMap = await fetchScoresFromOddsAPI();
+  //console.log('📦 Raw scores from Odds API:', JSON.stringify(gameMap, null, 2));
+
   const betsRef = db.collection('bets');
-  const snapshot = await betsRef.get();
+  const snapshot = await betsRef.get()
 
   for (const betDoc of snapshot.docs) {
     const slip = betDoc.data();
@@ -67,12 +66,14 @@ async function updateBetResults() {
       const game = gameMap[bet.gameId];
       if (!game || !game.completed) {
         allResolved = false;
+        console.log(`⚠️ Still pending bet[${index}]`, bet);
         return bet;
       }
 
       const won = isBetWinning(bet, game);
+      console.log(`Result bet[${index}]`, bet, won ? 'win' : 'lose');
       if (!won) allWon = false;
-
+      
       return { ...bet, result: won ? 'win' : 'lose' };
     });
 

@@ -1,10 +1,12 @@
 import fs from 'fs/promises';
 import path from 'path';
-import { ODDS_API_KEY } from "../config/oddsApi.js";
-import { debug } from "./debug.js";
+import dotenv from 'dotenv';
+dotenv.config();
+
+import { ODDS_API_KEY } from "../src/config/oddsApi.js";
+import { debug } from "../src/utils/debug.js";
 
 const CACHE_DIR = path.resolve('cache/scores');
-const CACHE_FILE = path.resolve('cache/odds-scores.json');
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour
 //const SPORTS = ['basketball_nba', 'football_nfl', 'baseball_mlb'];
 const SPORTS = ['baseball_mlb']
@@ -13,6 +15,7 @@ async function readSportCache(sport) {
   try {
     const file = path.join(CACHE_DIR, `${sport}.json`);
     const data = await fs.readFile(file, 'utf-8');
+    console.log('📦 Using CACHED scores');
     return JSON.parse(data);
   } catch {
     return null;
@@ -30,7 +33,7 @@ async function writeSportCache(sport, games) {
 }
 
 function isFresh(timestamp) {
-  return Date.now() - new Date(timestamp).getTime() < CACHE_TTL_MS;
+  return (Date.now() - new Date(timestamp).getTime()) < CACHE_TTL_MS;
 }
 
 function allGamesComplete(gameMap) {
@@ -38,6 +41,7 @@ function allGamesComplete(gameMap) {
 }
 
 async function fetchScoresForSport(sportKey, daysFrom = 2) {
+  console.log('🍏🍊 Getting FRESH scores');
   const url = `https://api.the-odds-api.com/v4/sports/${sportKey}/scores/?daysFrom=${daysFrom}&apiKey=${ODDS_API_KEY}`;
   const res = await fetch(url);
   if (!res.ok) {
@@ -76,11 +80,11 @@ export async function fetchScoresFromOddsAPI(daysFrom = 2) {
       if (allGamesComplete(cached.games)) {
         useCache = true;
         console.log(`✅ Using fresh cache for ${sport}`);
-        Object.assign(combinedGames, cached.games);
-        continue;
       } else {
         console.log(`♻️ Partial cache for ${sport} — some games incomplete`);
       }
+      Object.assign(combinedGames, cached.games);
+      continue;
     } else {
       console.log(`🕒 Cache missing/stale for ${sport}`);
     }
