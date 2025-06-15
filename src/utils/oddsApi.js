@@ -1,5 +1,5 @@
 // File: src/utils/oddsApi.js
-import { ODDS_API_KEY } from "../config/oddsApi.js";
+import { ODDS_API_KEY } from "../config/oddsApi.client.js";
 import { debug } from "./debug.js";
 
 //const SPORTS = ['basketball_nba', 'football_nfl', 'baseball_mlb'];

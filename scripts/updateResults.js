@@ -5,6 +5,12 @@ import { initializeApp, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { fetchScoresFromOddsAPI } from './oddsApi.node.js';
 
+// Load environment variables
+dotenv.config();
+
+// Log API key
+console.log('🔑 Using ODDS API Key:', process.env.ODDS_API_KEY);
+
 // Load Firebase Admin credentials
 const serviceAccount = JSON.parse(fs.readFileSync('./service-account.json', 'utf8'));
 
@@ -41,10 +47,10 @@ function isBetWinning(bet, finalScore) {
 
 async function updateBetResults() {
   const gameMap = await fetchScoresFromOddsAPI();
-  //console.log('📦 Raw scores from Odds API:', JSON.stringify(gameMap, null, 2));
+  console.log('📦 Raw scores from Odds API:', JSON.stringify(gameMap, null, 2));
 
   const betsRef = db.collection('bets');
-  const snapshot = await betsRef.get()
+  const snapshot = await betsRef.get();
 
   for (const betDoc of snapshot.docs) {
     const slip = betDoc.data();
@@ -66,15 +72,24 @@ async function updateBetResults() {
       const game = gameMap[bet.gameId];
       if (!game || !game.completed) {
         allResolved = false;
-        console.log(`⚠️ Still pending bet[${index}]`, bet);
         return bet;
       }
 
       const won = isBetWinning(bet, game);
-      console.log(`Result bet[${index}]`, bet, won ? 'win' : 'lose');
       if (!won) allWon = false;
-      
-      return { ...bet, result: won ? 'win' : 'lose' };
+
+      const result = won ? 'win' : 'lose';
+      console.log(`🎯 Bet result for slip ${betDoc.id}, bet[${index}] — game: ${bet.game}, team: ${bet.team}, market: ${bet.marketType}, result: ${result}`);
+
+      return {
+        ...bet,
+        result,
+        gameId: bet.gameId,
+        homeTeam: game.home_team,
+        awayTeam: game.away_team,
+        homeScore: game.scores?.[game.home_team]?.score ?? 0,
+        awayScore: game.scores?.[game.away_team]?.score ?? 0
+      };
     });
 
     if (allResolved) {

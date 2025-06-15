@@ -3,7 +3,7 @@ import path from 'path';
 import dotenv from 'dotenv';
 dotenv.config();
 
-import { ODDS_API_KEY } from "../src/config/oddsApi.js";
+import { ODDS_API_KEY } from "../src/config/oddsApi.node.js";
 import { debug } from "../src/utils/debug.js";
 
 const CACHE_DIR = path.resolve('cache/scores');

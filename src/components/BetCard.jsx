@@ -47,6 +47,16 @@ export default function BetCard({ bet }) {
     }
   };
 
+  const abbreviateTeam = (team) => {
+  if (!team) return "";
+  return team
+    .split(" ")
+    .map(word => word[0])
+    .join("")
+    .toUpperCase();
+};
+
+
   return (
     <div
       className={`p-3 rounded-lg border-2 shadow-lg ${
@@ -90,7 +100,13 @@ export default function BetCard({ bet }) {
               .map((b, i) => (
                 <div
                   key={i}
-                  className="flex justify-between items-start border-b border-gray-700 last:border-b-0 py-2"
+                  className={`flex justify-between items-start border-b border-gray-700 last:border-b-0 py-2 px-2 rounded ${
+                    b.result === "win"
+                      ? "bg-green-900/20"
+                      : b.result === "lose"
+                        ? "bg-red-900/20"
+                        : "bg-yellow-900/10"
+                  }`}
                 >
                   <div className="flex gap-2">
                     {/* Sport Icon */}
@@ -117,6 +133,19 @@ export default function BetCard({ bet }) {
                           ? `(${b.point}) `
                           : ""}
                         <span className="uppercase">{b.market}</span>
+                        {b.result && (
+                        <span
+                          className={`ml-2 px-1.5 py-0.5 text-xs rounded font-semibold ${
+                            b.result === "win"
+                              ? "bg-green-700 text-green-100"
+                              : b.result === "lose"
+                                ? "bg-red-700 text-red-100"
+                                : "bg-yellow-700 text-yellow-100"
+                          }`}
+                        >
+                          {b.result.toUpperCase()}
+                        </span>
+                      )}
                       </span>
                     </div>
                   </div>
