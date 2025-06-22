@@ -66,4 +66,4 @@ coverage/
 *.der
 *.p8
 
-private/
+scripts/README.md
