@@ -47,7 +47,7 @@ function isBetWinning(bet, finalScore) {
 
 async function updateBetResults() {
   const gameMap = await fetchScoresFromOddsAPI();
-  console.log('📦 Raw scores from Odds API:', JSON.stringify(gameMap, null, 2));
+  //console.log('📦 Raw scores from Odds API:', JSON.stringify(gameMap, null, 2));
 
   const betsRef = db.collection('bets');
   const snapshot = await betsRef.get();
@@ -100,7 +100,7 @@ async function updateBetResults() {
     }
   }
 
-  console.log('✅ Bet results updated.');
+  console.log('✅ Bet results updated at: ', new Date().toLocaleString());
 }
 
 updateBetResults().catch(console.error);
